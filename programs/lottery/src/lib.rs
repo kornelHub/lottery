@@ -7,9 +7,13 @@ pub mod lottery {
     use super::*;
     pub fn initialize(ctx: Context<Initialize>, _minimal_deposit_amount: u64) -> ProgramResult {
         let lottery_acc = &mut ctx.accounts.lottery_account;
-        
         lottery_acc.owner = *ctx.accounts.owner.key;
         lottery_acc.minimal_deposit_amount = _minimal_deposit_amount;
+
+        let lottery_participants 
+            = &mut ctx.accounts.lottery_participants;
+        lottery_participants.participants = Vec::new();
+        lottery_participants.amounts = Vec::new();
         Ok(())
     }
 }
@@ -20,6 +24,8 @@ pub struct Initialize<'info> {
     pub lottery_account: Account<'info, LotteryAccount>,
     #[account(mut)]
     pub owner: Signer<'info>,
+    #[account(init, payer = owner, space = 128 + 8)]
+    pub lottery_participants: Account<'info, LotteryParticipants>,
     pub system_program: Program<'info, System>,
 }
 
@@ -27,4 +33,10 @@ pub struct Initialize<'info> {
 pub struct LotteryAccount {
     pub owner: Pubkey,
     pub minimal_deposit_amount: u64,
+}
+
+#[account]
+pub struct LotteryParticipants {
+    pub participants: Vec<Pubkey>,
+    pub amounts: Vec<u64>,
 }

@@ -10,28 +10,23 @@ describe('lottery', () => {
   anchor.setProvider(provider);
 
   const program = anchor.workspace.Lottery as anchor.Program<Lottery>;
+  const lottery_acc = anchor.web3.Keypair.generate();
+  const lottery_participants = anchor.web3.Keypair.generate();
+  const payer_lottery_participants = anchor.web3.Keypair.generate();
 
   it("Init Lottery contract", async () => {
-
-    const lottery_acc = anchor.web3.Keypair.generate();
-    // console.log(await provider.connection.getBalance(lottery_acc.publicKey));
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(lottery_acc.publicKey, 1_000_000_000),
-      "confirmed"
-    );
-    console.log(await provider.connection.getBalance(lottery_acc.publicKey));
     await program.rpc.initialize(new anchor.BN(10_000), {
       accounts: {
         lotteryAccount: lottery_acc.publicKey,
         owner: provider.wallet.publicKey,
+        lotteryParticipants: lottery_participants.publicKey,
         systemProgram: SystemProgram.programId,
       },
-      signers: [lottery_acc],
+      signers: [lottery_acc, lottery_participants],
     });
     // Fetch the newly created account from the cluster.
     const account = await program.account.lotteryAccount.fetch(lottery_acc.publicKey);
     // Check it's state was initialized.
     assert.ok(account.minimalDepositAmount.eq(new anchor.BN(10_000)));
-    console.log(await provider.connection.getBalance(lottery_acc.publicKey));
   });
 });
